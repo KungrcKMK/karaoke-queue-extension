@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KungRC Karaoke Queue</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- License Screen -->
+  <div id="licenseScreen" class="licenseScreen hidden">
+    <div class="licenseCard">
+      <div class="licenseLogo">🎤</div>
+      <div class="licenseName">KungRC Karaoke Queue</div>
+      <div class="licenseSubtitle">กรุณาใส่ License Key เพื่อใช้งาน</div>
+      <input id="licenseInput" class="input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+             spellcheck="false" autocomplete="off" />
+      <div id="licenseError" class="licenseError"></div>
+      <button id="btnActivate" class="btn primary" style="width:100%">ยืนยัน License</button>
+    </div>
+  </div>
+
+  <!-- Update Banner -->
+  <div id="updateBanner" class="updateBanner hidden">
+    <span id="updateMsg">มีเวอร์ชันใหม่</span>
+    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+      <button id="btnDownloadUpdate" class="updateDlBtn">ดาวน์โหลด</button>
+      <button id="btnDismissUpdate" class="updateClose">✕</button>
+    </div>
+  </div>
+
+  <!-- Splash -->
+  <div id="splash" class="splash hidden" aria-hidden="true">
+    <div class="splashCard">
+      <div class="splashLogo">🎤</div>
+      <div class="splashText">พัฒนาโดย <b>KungRC</b></div>
+      <div class="splashSub">เก็บข้อมูลในเครื่อง • ไม่ส่งข้อมูลออก</div>
+    </div>
+  </div>
+
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">🎤</div>
+        <div class="title">
+          <div class="name">KungRC Karaoke Queue</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <button class="btn small" id="btnMiniToggle" title="มุมมองย่อ">⊡ ย่อ</button>
+        <div class="pill" id="statusPill">พร้อม</div>
+      </div>
+    </header>
+
+    <!-- Mini View (collapsed mode) -->
+    <section class="card" id="miniView">
+      <div class="cardHeader">
+        <div class="h">⏭ เพลงถัดไปในคิว</div>
+        <button class="btn small" id="btnMiniExpand">◀ ขยาย</button>
+      </div>
+      <div id="miniEmpty" class="empty">ไม่มีเพลงในคิว</div>
+      <div id="miniSongBlock" class="npContent" style="display:none">
+        <img id="miniThumb" class="npThumb" alt="" />
+        <div class="npInfo">
+          <div id="miniTitle" class="npTitle"></div>
+          <div id="miniSub" class="npTime"></div>
+        </div>
+      </div>
+      <div class="miniButtons">
+        <button class="btn" id="btnMiniWait">⏳ รอ</button>
+        <button class="btn primary" id="btnMiniPlayNow">▶ เล่นทันที</button>
+        <button class="btn" id="btnMiniBack">◀ ย้อนกลับ</button>
+        <button class="btn" id="btnMiniNext">⏭ ถัดไป</button>
+      </div>
+    </section>
+
+    <!-- Now Playing -->
+    <section class="card" id="nowPlayingCard" style="display:none">
+      <div class="cardHeader">
+        <div class="h">🎵 กำลังเล่น</div>
+        <div class="actions">
+          <button class="btn small" id="btnPausePlay">⏸</button>
+          <button class="btn small" id="btnSkipNow">⏭ ข้าม</button>
+        </div>
+      </div>
+      <div class="npContent">
+        <img id="npThumb" class="npThumb" alt="thumbnail" />
+        <div class="npInfo">
+          <div id="npTitle" class="npTitle"></div>
+          <div class="progressWrap"><div id="progressFill" class="progressFill"></div></div>
+          <div id="npTime" class="npTime"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search -->
+    <section class="card">
+      <div class="row" style="position:relative">
+        <input id="inputText" class="input" placeholder="พิมพ์ชื่อเพลง/ศิลปิน (ไม่ต้องพิมพ์ karaoke/lyrics เดี๋ยวเติมให้)" autocomplete="off" />
+        <ul id="suggestList" class="suggestList"></ul>
+      </div>
+
+      <div class="row gap">
+        <button class="btn primary" id="btnSearch">🔍 ค้นหา</button>
+        <button class="btn" id="btnSearchOpenYT">เปิดบน YouTube</button>
+        <button class="btn" id="btnClearSearch">ล้าง</button>
+      </div>
+
+      <div class="row gap">
+        <select class="select" id="searchMode">
+          <option value="karaoke">คาราโอเกะ</option>
+          <option value="lyrics">เนื้อเพลง</option>
+        </select>
+
+        <select class="select" id="thaiKeyMode">
+          <option value="auto">คีย์ไทย: อัตโนมัติ</option>
+          <option value="original">คีย์ไทย: ต้นฉบับ</option>
+          <option value="female">คีย์ไทย: ผู้หญิง</option>
+          <option value="male">คีย์ไทย: ผู้ชาย</option>
+        </select>
+
+        <label class="toggle">
+          <input type="checkbox" id="channelBias" />
+          <span>ช่องโปรด</span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" id="onlyKaraokeChannels" />
+          <span>เฉพาะช่องคาราโอเกะ</span>
+        </label>
+      </div>
+
+      <div class="row gap">
+        <label class="toggle">
+          <input type="checkbox" id="instrumentalMode" />
+          <span>ไม่มีเสียงร้อง</span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" id="autoPlayNext" />
+          <span>เล่นต่ออัตโนมัติ</span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" id="allowDuplicates" />
+          <span>อนุญาตซ้ำ</span>
+        </label>
+
+        <label class="toggle" style="gap:5px">
+          <span style="white-space:nowrap">วิวขั้นต่ำ</span>
+          <input type="number" id="minViewCount" class="input" min="0" step="100" style="width:70px;padding:3px 6px;font-size:11px" />
+        </label>
+
+      </div>
+
+    </section>
+
+    <!-- Search Results -->
+    <section class="card">
+      <div class="cardHeader">
+        <div class="h">ผลการค้นหา</div>
+        <div class="actions">
+          <button class="btn small" id="btnRefreshBias">รีเฟรช</button>
+        </div>
+      </div>
+
+      <div id="searchEmpty" class="empty">ยังไม่ได้ค้นหา… กด ค้นหา ได้เลย</div>
+      <ul id="searchList" class="list"></ul>
+
+      <div class="hint">
+        เพิ่ม = ต่อท้าย • VIP = แทรกหัวคิว • VIP+เล่น = แทรกแล้วเปิดเลย
+      </div>
+    </section>
+
+    <!-- Queue -->
+    <section class="card">
+      <div class="cardHeader">
+        <div class="h">คิวเพลง</div>
+        <div class="actions">
+          <button class="btn small" id="btnAddCurrent">เพิ่มเพลงนี้</button>
+          <button class="btn small" id="btnAddCurrentTop">แทรกหัวคิว</button>
+          <button class="btn small" id="btnAddCurrentTopPlay">แทรก+เล่นเลย</button>
+          <button class="btn small" id="btnSkip">ข้ามเพลง</button>
+          <button class="btn small" id="btnClear">ล้างคิว</button>
+        </div>
+      </div>
+
+      <div id="queueEmpty" class="empty">ยังไม่มีเพลงในคิว…</div>
+      <ul id="queueList" class="list"></ul>
+
+      <div class="hint">ลากเพื่อเรียง • ▶ เล่น • ✕ ลบ • เวลาอยู่ข้างชื่อ</div>
+    </section>
+
+    <!-- Playlists -->
+    <section class="card">
+      <div class="cardHeader">
+        <div class="h">เพลย์ลิสต์</div>
+        <div class="actions">
+          <button class="btn small primary" id="btnSavePl">💾 บันทึก</button>
+          <button class="btn small" id="btnLoadPl">📂 โหลด</button>
+        </div>
+      </div>
+      <input id="playlistName" class="input" placeholder="ชื่อไฟล์เพลย์ลิสต์ (ไม่ต้องใส่ .json)" />
+      <div class="hint">บันทึก = ดาวน์โหลดคิวเป็นไฟล์ .json • โหลด = เปิดไฟล์ .json มาใส่คิว</div>
+    </section>
+
+    <!-- ประวัติ -->
+    <section class="card">
+      <div class="cardHeader">
+        <div class="h">ประวัติ</div>
+        <div class="actions">
+          <button class="btn small" id="btnClearHistory">ล้าง</button>
+        </div>
+      </div>
+      <div id="historyEmpty" class="empty">ยังไม่มีประวัติ…</div>
+      <ul id="historyList" class="list"></ul>
+    </section>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "KungRC Karaoke Queue",
+  "version": "1.6.1",
+  "description": "Classic YouTube karaoke queue. Popup search, VIP Insert, autoplay next, playlists—local only.",
+  "action": {},
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "options_page": "options.html",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://i.ytimg.com/*",
+    "https://suggestqueries.google.com/*",
+    "https://docs.google.com/*",
+    "https://script.google.com/*",
+    "https://script.googleusercontent.com/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

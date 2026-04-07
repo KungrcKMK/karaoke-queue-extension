@@ -1,0 +1,5 @@
+KungRC_backup_*/
+*.zip
+*.crx
+.DS_Store
+Thumbs.db

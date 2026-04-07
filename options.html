@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KungRC Karaoke Queue - Options</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="head">
+      <div class="brand">
+        <div class="logo">🎤</div>
+        <div>
+          <div class="name">KungRC Karaoke Queue</div>
+          <div class="sub">Options • Bias Manager • Kill switch • Local-only</div>
+        </div>
+      </div>
+      <div class="pill" id="status">Ready</div>
+    </header>
+
+    <!-- About / Version -->
+    <section class="card about">
+      <div class="h">About</div>
+      <div class="aboutGrid">
+        <div class="aboutLeft">
+          <div class="aboutTitle">KungRC Karaoke Queue</div>
+          <div class="aboutMeta">
+            <span class="tag" id="aboutVersion">v?.?.?</span>
+            <span class="tag" id="aboutMV3">Manifest v?</span>
+            <span class="tag" id="aboutLocal">Local-only</span>
+          </div>
+          <div class="aboutDesc">
+            Classic queue manager for YouTube karaoke/lyrics.
+            VIP Insert ช่วยแทรกแบบสุภาพ… (อย่างน้อยชื่อมันสุภาพ 😆)
+          </div>
+        </div>
+        <div class="aboutRight">
+          <button class="btn" id="btnOpenPrivacy">Open Privacy Policy</button>
+          <button class="btn" id="btnOpenChangelog">Open Changelog</button>
+          <button class="btn" id="btnCopyDebug">Copy Debug Info</button>
+        </div>
+      </div>
+
+      <textarea id="debugBox" class="textarea" placeholder="Debug info จะมาอยู่ตรงนี้ (กด Copy Debug Info)"></textarea>
+    </section>
+
+    <section class="card">
+      <div class="h">Settings</div>
+
+      <div class="grid">
+        <label>
+          <span>Default search mode</span>
+          <select id="defaultSearchMode">
+            <option value="karaoke">Karaoke</option>
+            <option value="lyrics">Lyrics</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Thai key default</span>
+          <select id="thaiKeyMode">
+            <option value="auto">Auto</option>
+            <option value="original">ต้นฉบับ</option>
+            <option value="female">ผู้หญิง</option>
+            <option value="male">ผู้ชาย</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row">
+        <label class="check"><input type="checkbox" id="autoPlayNext"> <b>Auto-play next</b></label>
+        <label class="check"><input type="checkbox" id="allowDuplicates"> Allow duplicates</label>
+        <label class="check"><input type="checkbox" id="channelBias"> Channel bias</label>
+        <label class="check"><input type="checkbox" id="onlyKaraokeChannels"> ONLY karaoke channels</label>
+        <label class="check"><input type="checkbox" id="instrumentalMode"> No vocal</label>
+      </div>
+
+      <div class="row gap">
+        <button class="btn" id="btnSave">Save settings</button>
+        <button class="btn" id="btnResetSettings">Reset settings</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="h">Kill switch (หยุด autoplay ชั่วคราว)</div>
+      <div class="row gap">
+        <button class="btn" id="kill30">Pause 30 min</button>
+        <button class="btn" id="kill60">Pause 60 min</button>
+        <button class="btn" id="killOff">Resume autoplay</button>
+      </div>
+      <div class="hint">กด Pause กันบ้านแตกได้ระดับหนึ่ง… ที่เหลือขึ้นกับนักร้อง 😆</div>
+    </section>
+
+    <section class="card">
+      <div class="h">Bias Manager</div>
+
+      <div class="row gap">
+        <button class="btn" id="btnExportBias">Export bias JSON</button>
+        <button class="btn" id="btnImportBias">Import bias JSON</button>
+        <button class="btn" id="btnClearStats">Clear learned stats</button>
+        <button class="btn" id="btnClearFavs">Clear favorites</button>
+      </div>
+
+      <textarea id="biasJson" class="textarea" placeholder="bias JSON จะอยู่ตรงนี้"></textarea>
+
+      <div class="split">
+        <div>
+          <div class="hh">⭐ Favorites</div>
+          <ul id="favList" class="list"></ul>
+        </div>
+
+        <div>
+          <div class="hh">🧠 Learned Channels</div>
+          <ul id="learnedList" class="list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card danger">
+      <div class="h">Danger zone</div>
+      <div class="row gap">
+        <button class="btn dangerBtn" id="btnResetAll">RESET ALL DATA (queue+settings+bias+cache)</button>
+      </div>
+      <div class="hint">ล้างหมดจริง เหมือนกด clear EEPROM แล้วร้องไห้ทีหลัง 😅</div>
+    </section>
+
+    <footer class="foot">
+      <span id="footText">Local-only • no data collected • v?.?.?</span>
+    </footer>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
