@@ -3,7 +3,7 @@
 #  วางไฟล์นี้ไว้นอกโฟลเดอร์ extension (ระดับเดียวกับโฟลเดอร์)
 # ============================================================
 
-$VERSION_URL  = "https://raw.githubusercontent.com/KungrcKMK/kungrc-releases/main/version.json"
+$VERSION_URL  = "https://raw.githubusercontent.com/KungrcKMK/karaoke-queue-extension/main/version.json"
 $EXT_FOLDER   = Join-Path $PSScriptRoot "KungRC_Karaoke_Queue"
 $TMP_ZIP      = Join-Path $env:TEMP "kungrc_update.zip"
 $TMP_EXTRACT  = Join-Path $env:TEMP "kungrc_update_extracted"

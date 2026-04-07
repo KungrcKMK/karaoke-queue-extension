@@ -5,7 +5,7 @@ const VERSION = "1.6.1";
 const $ = (id) => document.getElementById(id);
 
 // ===== OTA Version Check =====
-const VERSION_URL = "https://raw.githubusercontent.com/KungrcKMK/kungrc-releases/main/version.json";
+const VERSION_URL = "https://raw.githubusercontent.com/KungrcKMK/karaoke-queue-extension/main/version.json";
 const UPDATE_CACHE_MS = 24 * 3600 * 1000; // เช็คใหม่ทุก 24 ชม.
 
 function compareVersions(a, b){
