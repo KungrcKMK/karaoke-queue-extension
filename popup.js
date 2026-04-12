@@ -204,7 +204,7 @@ async function storageGet(keys){ return await chrome.storage.local.get(keys); }
 async function storageSet(obj){ return await chrome.storage.local.set(obj); }
 
 async function getState(){
-  const data = await storageGet(["queue","playlists","settings","metaCache","channelStats","favChannels","lastSearchResults","history"]);
+  const data = await storageGet(["queue","playlists","settings","metaCache","channelStats","favChannels","lastSearchResults","lastSearchQuery","history"]);
   const s = data.settings && typeof data.settings === "object" ? data.settings : {};
   return {
     queue: Array.isArray(data.queue) ? data.queue : [],
@@ -224,6 +224,7 @@ async function getState(){
     channelStats: data.channelStats && typeof data.channelStats === "object" ? data.channelStats : {},
     favChannels: Array.isArray(data.favChannels) ? data.favChannels : [],
     lastSearchResults: Array.isArray(data.lastSearchResults) ? data.lastSearchResults : [],
+    lastSearchQuery: data.lastSearchQuery || "",
     history: Array.isArray(data.history) ? data.history : []
   };
 }
@@ -236,8 +237,8 @@ async function setSettingsPatch(patch){
   await chrome.runtime.sendMessage({ type: "SETTINGS_SET", patch });
 }
 
-async function setLastSearchResults(results){
-  await storageSet({ lastSearchResults: results });
+async function setLastSearchResults(results, query=""){
+  await storageSet({ lastSearchResults: results, lastSearchQuery: query });
 }
 
 async function setMetaCache(metaCache){
@@ -595,9 +596,23 @@ function parseViewCount(text){
   return 0;
 }
 
-function applyChannelBiasToResults(results, channelStats, favChannels, settings){
+function titleMatchesQuery(title, rawQuery){
+  if(!rawQuery) return true;
+  const t = (title || "").toLowerCase();
+  // ตัด keyword คาราโอเกะออก เหลือแค่ชื่อเพลงจริงๆ
+  const core = (rawQuery || "").toLowerCase()
+    .replace(/karaoke|คาราโอเกะ|lyrics|เนื้อเพลง|minus one|no vocal|instrumental|backing track/gi,"")
+    .replace(/\s+/g," ").trim();
+  if(!core) return true;
+  // แบ่งเป็นคำๆ (ยาวกว่า 1 ตัวอักษร) แล้วเช็คว่า title มีอย่างน้อย 1 คำ
+  const parts = core.split(/\s+/).filter(p => p.length > 1);
+  if(!parts.length) return t.includes(core);
+  return parts.some(p => t.includes(p));
+}
+
+function applyChannelBiasToResults(results, channelStats, favChannels, settings, rawQuery=""){
   const stats = channelStats || {};
-  const karaokeWords = ["karaoke","คาราโอเกะ","minus one","no vocal","instrumental"];
+  const karaokeWords = ["karaoke","คาราโอเกะ","minus one","no vocal","instrumental","backing track"];
 
   const shortsPattern = /\/shorts\//i;
   const minViews = settings.minViewCount ?? 500;
@@ -605,6 +620,15 @@ function applyChannelBiasToResults(results, channelStats, favChannels, settings)
     .filter(r => {
       if(parseViewCount(r.viewText) < minViews) return false;
       if(shortsPattern.test(r.url || "")) return false;
+      // กรองเนื้อหา: ชื่อวิดีโอต้องมีคำคาราโอเกะ
+      // ยกเว้น: ช่องที่เคยเล่นมาแล้ว (trusted)
+      const t = (r.title || "").toLowerCase();
+      const cid = getChannelIdFromOwnerText(r.owner);
+      const isTrustedChannel = (stats[cid]?.count || 0) > 0;
+      const hasTitleKeyword = karaokeWords.some(w => t.includes(w));
+      if(!hasTitleKeyword && !isTrustedChannel) return false;
+      // ชื่อวิดีโอต้องมีคำที่ค้นหา
+      if(!titleMatchesQuery(r.title, rawQuery)) return false;
       return true;
     })
     .map(r => {
@@ -1000,7 +1024,7 @@ async function refresh(){
   renderQueue(st.queue, st.metaCache || {});
 
   // search
-  const biasedResults = applyChannelBiasToResults(st.lastSearchResults || [], st.channelStats, st.favChannels, st.settings);
+  const biasedResults = applyChannelBiasToResults(st.lastSearchResults || [], st.channelStats, st.favChannels, st.settings, st.lastSearchQuery);
   renderSearchResults(biasedResults, st);
 
   // history
@@ -1147,9 +1171,9 @@ async function doSearch(openOnYoutube=false){
       ...r,
       url: `https://www.youtube.com/watch?v=${encodeURIComponent(r.videoId)}`
     }));
-    await setLastSearchResults(enriched);
+    await setLastSearchResults(enriched, q);
     const st2 = await getState();
-    const biased = applyChannelBiasToResults(enriched, st2.channelStats, st2.favChannels, st2.settings);
+    const biased = applyChannelBiasToResults(enriched, st2.channelStats, st2.favChannels, st2.settings, q);
     renderSearchResults(biased, st2);
     setStatus(`พบ ${biased.length} วิดีโอ`, "ok");
   }catch(e){
