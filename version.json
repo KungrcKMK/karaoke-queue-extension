@@ -1,5 +1,5 @@
 {
-  "version": "1.6.1",
-  "notes": "ปรับปรุงระบบค้นหาคาราโอเกะ",
+  "version": "1.6.2",
+  "notes": "แก้ปัญหาค้นหาเพลงไม่เจอ",
   "downloadUrl": "https://github.com/KungrcKMK/karaoke-queue-extension/releases/latest/download/KungRC_Karaoke_Queue.zip"
 }

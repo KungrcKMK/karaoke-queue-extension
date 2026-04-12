@@ -1,7 +1,7 @@
 ﻿// KungRC Karaoke Queue - popup.js
 // Version: 1.6.1
 
-const VERSION = "1.6.1";
+const VERSION = "1.6.2";
 const $ = (id) => document.getElementById(id);
 
 // ===== OTA Version Check =====
@@ -605,9 +605,6 @@ function applyChannelBiasToResults(results, channelStats, favChannels, settings)
     .filter(r => {
       if(parseViewCount(r.viewText) < minViews) return false;
       if(shortsPattern.test(r.url || "")) return false;
-      const t = (r.title || "").toLowerCase();
-      const o = (r.owner || "").toLowerCase();
-      if(!karaokeWords.some(w => t.includes(w) || o.includes(w))) return false;
       return true;
     })
     .map(r => {
