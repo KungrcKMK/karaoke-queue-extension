@@ -627,8 +627,6 @@ function applyChannelBiasToResults(results, channelStats, favChannels, settings,
       const isTrustedChannel = (stats[cid]?.count || 0) > 0;
       const hasTitleKeyword = karaokeWords.some(w => t.includes(w));
       if(!hasTitleKeyword && !isTrustedChannel) return false;
-      // ชื่อวิดีโอต้องมีคำที่ค้นหา
-      if(!titleMatchesQuery(r.title, rawQuery)) return false;
       return true;
     })
     .map(r => {
