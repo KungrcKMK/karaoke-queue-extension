@@ -1,5 +1,5 @@
 {
-  "version": "1.6.2",
-  "notes": "แก้ปัญหาค้นหาเพลงไม่เจอ",
+  "version": "1.6.3",
+  "notes": "กรองผลค้นหาที่ชื่อวิดีโอไม่ตรงกับคำค้นหา",
   "downloadUrl": "https://github.com/KungrcKMK/karaoke-queue-extension/releases/latest/download/KungRC_Karaoke_Queue.zip"
 }
