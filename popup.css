@@ -618,3 +618,63 @@ body::-webkit-scrollbar-thumb:hover,
   background: rgba(124,77,255,.2);
   color: var(--neon);
 }
+
+/* ===== Queue Summary ===== */
+.queueSummary{
+  font-size: 11px;
+  color: var(--neon);
+  background: rgba(0,229,255,.06);
+  border: 1px solid rgba(0,229,255,.15);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+  margin-bottom: 4px;
+  text-shadow: 0 0 4px rgba(0,229,255,.3);
+  font-weight: 600;
+}
+
+/* ===== Singer Badge ===== */
+.singerBadge{
+  font-size: 9px;
+  padding: 1px 6px;
+  background: linear-gradient(135deg, rgba(224,64,251,.15), rgba(124,77,255,.15));
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Break Timer ===== */
+.breakActive{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+.breakTimer{
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(224,64,251,.5);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+.breakLabel{
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ===== History VIP buttons ===== */
+.histItem .histActions{
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.histItem .histActions .iconBtn{
+  font-size: 9px;
+  padding: 2px 5px;
+}

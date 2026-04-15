@@ -1,7 +1,7 @@
 ﻿// KungRC Karaoke Queue - popup.js
 // Version: 1.6.1
 
-const VERSION = "1.6.2";
+const VERSION = "1.7.0";
 const $ = (id) => document.getElementById(id);
 
 // ===== OTA Version Check =====
@@ -179,6 +179,20 @@ const historyList = $("historyList");
 const historyEmpty = $("historyEmpty");
 const btnClearHistory = $("btnClearHistory");
 
+// Singer
+const singerInput = $("singerInput");
+const queueSummary = $("queueSummary");
+
+// Break Timer
+const breakIdle = $("breakIdle");
+const breakActive = $("breakActive");
+const breakTimerDisplay = $("breakTimerDisplay");
+const btnBreak5 = $("btnBreak5");
+const btnBreak10 = $("btnBreak10");
+const btnBreak15 = $("btnBreak15");
+const btnBreakCustom = $("btnBreakCustom");
+const btnBreakCancel = $("btnBreakCancel");
+
 // Mini view
 const btnMiniToggle = $("btnMiniToggle");
 const miniView = $("miniView");
@@ -204,7 +218,7 @@ async function storageGet(keys){ return await chrome.storage.local.get(keys); }
 async function storageSet(obj){ return await chrome.storage.local.set(obj); }
 
 async function getState(){
-  const data = await storageGet(["queue","playlists","settings","metaCache","channelStats","favChannels","lastSearchResults","lastSearchQuery","history"]);
+  const data = await storageGet(["queue","playlists","settings","metaCache","channelStats","favChannels","lastSearchResults","lastSearchQuery","history","singerMap"]);
   const s = data.settings && typeof data.settings === "object" ? data.settings : {};
   return {
     queue: Array.isArray(data.queue) ? data.queue : [],
@@ -225,7 +239,8 @@ async function getState(){
     favChannels: Array.isArray(data.favChannels) ? data.favChannels : [],
     lastSearchResults: Array.isArray(data.lastSearchResults) ? data.lastSearchResults : [],
     lastSearchQuery: data.lastSearchQuery || "",
-    history: Array.isArray(data.history) ? data.history : []
+    history: Array.isArray(data.history) ? data.history : [],
+    singerMap: data.singerMap && typeof data.singerMap === "object" ? data.singerMap : {}
   };
 }
 
@@ -763,8 +778,6 @@ function renderHistory(history, metaCache){
     const meta = metaCache[item.url] || {};
     const li = document.createElement("li");
     li.className = "histItem";
-    li.title = "คลิกเพื่อเพิ่มในคิว";
-    li.onclick = () => addUrlToQueue(item.url,"bottom",{ title: meta.title });
 
     const img = document.createElement("img");
     img.className = "thumb";
@@ -774,6 +787,9 @@ function renderHistory(history, metaCache){
 
     const info = document.createElement("div");
     info.className = "histMeta";
+    info.style.cursor = "pointer";
+    info.title = "คลิกเพื่อเพิ่มในคิว";
+    info.onclick = () => addUrlToQueue(item.url,"bottom",{ title: meta.title });
     const t = document.createElement("div");
     t.className = "t";
     t.textContent = meta.title || item.url;
@@ -783,13 +799,54 @@ function renderHistory(history, metaCache){
     info.appendChild(t);
     info.appendChild(u);
 
+    // ปุ่ม VIP + เล่น
+    const acts = document.createElement("div");
+    acts.className = "histActions";
+
+    const vipBtn = document.createElement("button");
+    vipBtn.className = "iconBtn";
+    vipBtn.textContent = "VIP";
+    vipBtn.title = "แทรกหัวคิว";
+    vipBtn.onclick = (e) => { e.stopPropagation(); addUrlToQueue(item.url,"top",{ title: meta.title }); };
+
+    const vipPlayBtn = document.createElement("button");
+    vipPlayBtn.className = "iconBtn";
+    vipPlayBtn.textContent = "▶";
+    vipPlayBtn.title = "VIP+เล่นเลย";
+    vipPlayBtn.onclick = (e) => { e.stopPropagation(); addUrlToQueue(item.url,"top",{ title: meta.title },true); };
+
+    acts.appendChild(vipBtn);
+    acts.appendChild(vipPlayBtn);
+
     li.appendChild(img);
     li.appendChild(info);
+    li.appendChild(acts);
     historyList.appendChild(li);
   });
 }
 
-function renderQueue(queue, metaCache){
+function renderQueueSummary(queue, metaCache){
+  if(!queue.length){
+    queueSummary.style.display = "none";
+    return;
+  }
+  let totalSec = 0;
+  let hasUnknown = false;
+  for(const url of queue){
+    const sec = (metaCache[url] || {}).durationSec;
+    if(Number.isFinite(sec)) totalSec += sec;
+    else hasUnknown = true;
+  }
+  const approx = hasUnknown ? "~" : "";
+  const totalMin = Math.ceil(totalSec / 60);
+  const now = new Date();
+  const finishTime = new Date(now.getTime() + totalSec * 1000);
+  const finishStr = finishTime.toLocaleTimeString("th-TH", { hour:"2-digit", minute:"2-digit" });
+  queueSummary.textContent = `${queue.length} เพลง • ${approx}${totalMin} นาที • จบประมาณ ${finishStr}`;
+  queueSummary.style.display = "block";
+}
+
+function renderQueue(queue, metaCache, singerMap){
   queueList.innerHTML = "";
   queueEmpty.style.display = queue.length ? "none" : "block";
 
@@ -797,11 +854,17 @@ function renderQueue(queue, metaCache){
   const queueHeader = document.querySelector("#queueList").closest(".card").querySelector(".h");
   if(queueHeader) queueHeader.textContent = queue.length ? `คิวเพลง (${queue.length})` : "คิวเพลง";
 
+  // แสดงเวลารวม + เวลาจบโดยประมาณ
+  renderQueueSummary(queue, metaCache);
+
+  const singers = singerMap || {};
+
   queue.forEach((url, index) => {
     const meta = metaCache[url] || {};
     const title = meta.title || "Loading…";
     const thumb = meta.thumb || "";
     const durText = formatDuration(meta.durationSec);
+    const singer = singers[url] || "";
     const li = document.createElement("li");
     li.className = "item";
     li.draggable = true;
@@ -827,6 +890,13 @@ function renderQueue(queue, metaCache){
     const t = document.createElement("div");
     t.className = "t";
     t.textContent = title;
+
+    if(singer){
+      const sb = document.createElement("span");
+      sb.className = "singerBadge";
+      sb.textContent = singer;
+      t.prepend(sb, document.createTextNode(" "));
+    }
 
     const d = document.createElement("div");
     d.className = "d";
@@ -1019,7 +1089,7 @@ async function refresh(){
   minViewCount.value = st.settings.minViewCount ?? 500;
 
   // queue
-  renderQueue(st.queue, st.metaCache || {});
+  renderQueue(st.queue, st.metaCache || {}, st.singerMap || {});
 
   // search
   const biasedResults = applyChannelBiasToResults(st.lastSearchResults || [], st.channelStats, st.favChannels, st.settings, st.lastSearchQuery);
@@ -1048,6 +1118,15 @@ async function addUrlToQueue(url, position="bottom", hint=null, playNowToo=false
   await setQueue(q);
   await ensureMetaForUrl(url, hint);
   await bumpChannelStatForUrl(url);
+
+  // บันทึกชื่อคนร้อง
+  const singer = (singerInput.value || "").trim();
+  if(singer){
+    const map = { ...(st.singerMap || {}) };
+    map[url] = singer;
+    await storageSet({ singerMap: map });
+  }
+
   await refresh();
   setStatus(position === "top" ? "แทรกหัวคิวแล้ว" : "เพิ่มแล้ว", "ok");
 
@@ -1102,7 +1181,7 @@ async function playNow(url){
     const hist = (st.history || []).slice();
     if(!hist.length || hist[0].url !== url){
       hist.unshift({ url, playedAt: Date.now() });
-      if(hist.length > 5) hist.length = 5;
+      if(hist.length > 50) hist.length = 50;
       await storageSet({ history: hist });
     }
 
@@ -1349,6 +1428,86 @@ inputText.addEventListener("blur", ()=>{
   setTimeout(closeSuggestions, 150);
 });
 
+// ===== Break Timer =====
+let _breakEndTime = null;
+let _breakInterval = null;
+
+function startBreak(minutes){
+  if(minutes <= 0) return;
+  _breakEndTime = Date.now() + minutes * 60 * 1000;
+  breakIdle.style.display = "none";
+  breakActive.style.display = "flex";
+  setStatus(`พักเบรค ${minutes} นาที`, "warn");
+
+  // หยุด autoplay ชั่วคราว
+  setSettingsPatch({ killUntil: _breakEndTime });
+
+  updateBreakDisplay();
+  _breakInterval = setInterval(()=>{
+    const remaining = _breakEndTime - Date.now();
+    if(remaining <= 0){
+      endBreak();
+      return;
+    }
+    updateBreakDisplay();
+  }, 500);
+}
+
+function updateBreakDisplay(){
+  const remaining = Math.max(0, _breakEndTime - Date.now());
+  const totalSec = Math.ceil(remaining / 1000);
+  const mm = Math.floor(totalSec / 60);
+  const ss = totalSec % 60;
+  breakTimerDisplay.textContent = `${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
+}
+
+function endBreak(){
+  clearInterval(_breakInterval);
+  _breakInterval = null;
+  _breakEndTime = null;
+  breakIdle.style.display = "block";
+  breakActive.style.display = "none";
+  setSettingsPatch({ killUntil: 0 });
+  setStatus("หมดเวลาพัก — เล่นต่อ!", "ok");
+}
+
+function cancelBreak(){
+  clearInterval(_breakInterval);
+  _breakInterval = null;
+  _breakEndTime = null;
+  breakIdle.style.display = "block";
+  breakActive.style.display = "none";
+  setSettingsPatch({ killUntil: 0 });
+  setStatus("ยกเลิกพัก — เล่นต่อเลย", "ok");
+}
+
+// ตรวจสอบ break state จาก storage เมื่อเปิด popup
+async function restoreBreakState(){
+  const st = await getState();
+  const killUntil = st.settings.killUntil || 0;
+  if(killUntil > Date.now()){
+    _breakEndTime = killUntil;
+    breakIdle.style.display = "none";
+    breakActive.style.display = "flex";
+    updateBreakDisplay();
+    _breakInterval = setInterval(()=>{
+      const remaining = _breakEndTime - Date.now();
+      if(remaining <= 0){ endBreak(); return; }
+      updateBreakDisplay();
+    }, 500);
+  }
+}
+
+btnBreak5.addEventListener("click", ()=> startBreak(5));
+btnBreak10.addEventListener("click", ()=> startBreak(10));
+btnBreak15.addEventListener("click", ()=> startBreak(15));
+btnBreakCustom.addEventListener("click", ()=>{
+  const val = prompt("กี่นาที?", "3");
+  const m = parseInt(val);
+  if(m > 0) startBreak(m);
+});
+btnBreakCancel.addEventListener("click", cancelBreak);
+
 // Keyboard shortcuts (เมื่อ focus อยู่ที่ panel ไม่ใช่ input)
 document.addEventListener("keydown",(e)=>{
   if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA"||e.target.tagName==="SELECT") return;
@@ -1364,5 +1523,6 @@ document.addEventListener("keydown",(e)=>{
   await refresh();
   setStatus("พร้อม", "ok");
   startNowPlayingPoll();
+  restoreBreakState();
   checkForUpdate(); // ไม่ต้อง await — ทำ background
 })();

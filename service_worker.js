@@ -42,7 +42,7 @@ async function addToHistory(url){
   const hist = Array.isArray(data.history) ? data.history : [];
   if(hist.length > 0 && hist[0].url === url) return;
   hist.unshift({ url, playedAt: Date.now() });
-  if(hist.length > 5) hist.length = 5;
+  if(hist.length > 50) hist.length = 50;
   await setLocal({ history: hist });
 }
 
